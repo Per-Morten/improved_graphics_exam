@@ -13,6 +13,7 @@
 #include <tuple>
 
 #include "Consts.h"
+#include "Logger.h"
 
 namespace
 {
@@ -226,6 +227,7 @@ void Renderer::render(const std::string& shaderName,
         bool newTexture = false;
         if (lastShader != shaderName)
         {
+            _shaderChanges++;
             newShader = true;
             _shaderPrograms[shaderName]->bind();
             lastShader = shaderName;
@@ -235,6 +237,7 @@ void Renderer::render(const std::string& shaderName,
         static std::string lastTexture;
         if (lastTexture != textureName)
         {
+            _textureChanges++;
             numberOfRows = _textures[textureName]->getNumberOfRows();
             _textures[textureName]->bind();
             lastTexture = textureName;
@@ -247,6 +250,7 @@ void Renderer::render(const std::string& shaderName,
         // Feels very like a hack!
         if (prevFacingDirection != facing)
         {
+            _cullChanges++;
             if (facing == FacingDirection::FRONT)
             {
                 glCullFace(GL_FRONT);
@@ -377,6 +381,59 @@ bool Renderer::isDayTime() const noexcept
     return _sunAngle > lowerNightAngle && _sunAngle < upperNightAngle;
 }
 
+void Renderer::setWindowTitle(const char* title)
+{
+    SDL_SetWindowTitle(_window, title);
+}
+
+void Renderer::logFrameStats()
+{
+    LOG_DEBUG("Frame nr: %d\n \
+              _shaderChanges %d\n \
+              _textureChanges %d\n \
+              _cullChanges %d\n \
+              _setColorUniformChanges %d\n \
+              _setModelMatrixUniformChanges %d\n \
+              _setNormalMatrixUniformChanges %d\n \
+              _setTextureOffsetUniformChanges %d\n \
+              _setNumberOfRowsChanges %d\n \
+              _setViewMatrixUniformChanges %d\n \
+              _setProjectionMatrixUniformChanges %d\n \
+              _setAmbientFactorUniformChanges %d\n \
+              _setLightDirectionUniformChanges %d\n \
+              _setWorldScaleUniformChanges %d\n \
+              ",
+              _frameNumber++,
+              _shaderChanges,
+              _textureChanges,
+              _cullChanges,
+              _setColorUniformChanges,
+              _setModelMatrixUniformChanges,
+              _setNormalMatrixUniformChanges,
+              _setTextureOffsetUniformChanges,
+              _setNumberOfRowsChanges,
+              _setViewMatrixUniformChanges,
+              _setProjectionMatrixUniformChanges,
+              _setAmbientFactorUniformChanges,
+              _setLightDirectionUniformChanges,
+              _setWorldScaleUniformChanges
+             );
+
+    _shaderChanges = 0;
+    _textureChanges = 0;
+    _cullChanges = 0;
+    _setColorUniformChanges = 0;
+    _setModelMatrixUniformChanges = 0;
+    _setNormalMatrixUniformChanges = 0;
+    _setTextureOffsetUniformChanges = 0;
+    _setNumberOfRowsChanges = 0;
+    _setViewMatrixUniformChanges = 0;
+    _setProjectionMatrixUniformChanges = 0;
+    _setAmbientFactorUniformChanges = 0;
+    _setLightDirectionUniformChanges = 0;
+    _setWorldScaleUniformChanges = 0;
+}
+
 // Private functions
 // Rendering functions
 // Object related
@@ -386,6 +443,7 @@ void Renderer::setColorUniform(const std::string& shaderName, bool newShader, co
     static glm::vec4 prevColor;
     if (newShader)
     {
+        _setColorUniformChanges++;
         colorId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::color);
         prevColor = color;
         glUniform4f(colorId, color.r, color.g, color.b, color.a);
@@ -393,6 +451,7 @@ void Renderer::setColorUniform(const std::string& shaderName, bool newShader, co
     }
     if (color != prevColor)
     {
+        _setColorUniformChanges++;
         prevColor = color;
         glUniform4f(colorId, color.r, color.g, color.b, color.a);
         return;
@@ -405,6 +464,7 @@ void Renderer::setModelMatrixUniform(const std::string& shaderName, bool newShad
     static glm::mat4 prevModelMatrix;
     if (newShader)
     {
+        _setModelMatrixUniformChanges++;
         modelMatrixId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::modelMatrix);
         prevModelMatrix = modelMatrix;
         glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, glm::value_ptr(modelMatrix));
@@ -412,6 +472,7 @@ void Renderer::setModelMatrixUniform(const std::string& shaderName, bool newShad
     }
     if (modelMatrix != prevModelMatrix)
     {
+        _setModelMatrixUniformChanges++;
         prevModelMatrix = modelMatrix;
         glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, glm::value_ptr(modelMatrix));
         return;
@@ -424,6 +485,7 @@ void Renderer::setTextureOffsetUniform(const std::string& shaderName, bool newSh
     static GLuint prevTextureIndex;
     if (newShader || newTexture)
     {
+        _setTextureOffsetUniformChanges++;
         textureOffsetId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::textureOffset);
         prevTextureIndex = textureIndex;
         float column = static_cast<float>(textureIndex % numberOfRows);
@@ -435,6 +497,7 @@ void Renderer::setTextureOffsetUniform(const std::string& shaderName, bool newSh
     }
     if (textureIndex != prevTextureIndex)
     {
+        _setTextureOffsetUniformChanges++;
         prevTextureIndex = textureIndex;
         float column = static_cast<float>(textureIndex % numberOfRows);
         float row = static_cast<float>(textureIndex / numberOfRows);
@@ -448,18 +511,20 @@ void Renderer::setTextureOffsetUniform(const std::string& shaderName, bool newSh
 void Renderer::setNormalMatrixUniform(const std::string& shaderName, bool newShader, const glm::mat4& modelMatrix) noexcept
 {
     static ShaderProgram::UniformAddress normalMatrixId;
-    static glm::mat4 prevModelMatrix;
+    static glm::mat4 prevNormalMatrix;
     if (newShader)
     {
+        _setNormalMatrixUniformChanges++;
         normalMatrixId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::normalMatrix);
-        prevModelMatrix = modelMatrix;
+        prevNormalMatrix = modelMatrix;
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(_camera.getViewMatrix() * modelMatrix)));
         glUniformMatrix3fv(normalMatrixId, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         return;
     }
-    if (modelMatrix != prevModelMatrix)
+    if (modelMatrix != prevNormalMatrix)
     {
-        prevModelMatrix = modelMatrix;
+        _setNormalMatrixUniformChanges++;
+        prevNormalMatrix = modelMatrix;
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(_camera.getViewMatrix() * modelMatrix)));
         glUniformMatrix3fv(normalMatrixId, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         return;
@@ -472,6 +537,7 @@ void Renderer::setNumberOfRows(const std::string& shaderName, bool newShader, bo
     static GLuint prevNumberOfRows;
     if (newShader || newTexture)
     {
+        _setNumberOfRowsChanges++;
         numberOfRowsId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::numberOfRows);
         prevNumberOfRows = numberOfRows;
         glUniform1ui(numberOfRowsId, numberOfRows);
@@ -479,6 +545,7 @@ void Renderer::setNumberOfRows(const std::string& shaderName, bool newShader, bo
     }
     if (numberOfRows != prevNumberOfRows)
     {
+        _setNumberOfRowsChanges++;
         prevNumberOfRows = numberOfRows;
         glUniform1ui(numberOfRowsId, numberOfRows);
         return;
@@ -494,6 +561,7 @@ void Renderer::setViewMatrixUniform(const std::string& shaderName, bool newShade
     const glm::mat4& viewMatrix = _camera.getViewMatrix();
     if (newShader)
     {
+        _setViewMatrixUniformChanges++;
         viewMatrixId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::viewMatrix);
         prevViewMatrix = viewMatrix;
         glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -501,6 +569,7 @@ void Renderer::setViewMatrixUniform(const std::string& shaderName, bool newShade
     }
     if (viewMatrix != prevViewMatrix)
     {
+        _setViewMatrixUniformChanges++;
         prevViewMatrix = viewMatrix;
         glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, glm::value_ptr(viewMatrix));
         return;
@@ -513,6 +582,7 @@ void Renderer::setProjectionMatrixUniform(const std::string& shaderName, bool ne
     static glm::mat4 prevProjectionMatrix;
     if (newShader)
     {
+        _setProjectionMatrixUniformChanges++;
         projectionMatrixId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::projectionMatrix);
         prevProjectionMatrix = _projectionMatrix;
         glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, glm::value_ptr(_projectionMatrix));
@@ -520,7 +590,7 @@ void Renderer::setProjectionMatrixUniform(const std::string& shaderName, bool ne
     }
     if (_projectionMatrix != prevProjectionMatrix)
     {
-
+        _setProjectionMatrixUniformChanges++;
         prevProjectionMatrix = _projectionMatrix;
         glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, glm::value_ptr(_projectionMatrix));
         return;
@@ -533,6 +603,7 @@ void Renderer::setAmbientFactorUniform(const std::string & shaderName, bool newS
     static float prevAmbientFactor;
     if (newShader)
     {
+        _setAmbientFactorUniformChanges++;
         ambientFactorId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::ambientFactor);
         prevAmbientFactor = _ambientFactor;
         glUniform1f(ambientFactorId, _ambientFactor);
@@ -540,7 +611,7 @@ void Renderer::setAmbientFactorUniform(const std::string & shaderName, bool newS
     }
     if (_ambientFactor != prevAmbientFactor)
     {
-
+        _setAmbientFactorUniformChanges++;
         prevAmbientFactor = _ambientFactor;
         glUniform1f(ambientFactorId, _ambientFactor);
         return;
@@ -553,6 +624,7 @@ void Renderer::setLightDirectionUniform(const std::string & shaderName, bool new
     static glm::vec3 prevLightDirection;
     if (newShader)
     {
+        _setLightDirectionUniformChanges++;
         lightDirectionId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::lightDirection);
         prevLightDirection = _lightDirection;
         glUniform3f(lightDirectionId, _lightDirection.x, _lightDirection.y, _lightDirection.z);
@@ -560,6 +632,7 @@ void Renderer::setLightDirectionUniform(const std::string & shaderName, bool new
     }
     if (_lightDirection != prevLightDirection)
     {
+        _setLightDirectionUniformChanges++;
         prevLightDirection = _lightDirection;
         glUniform3f(lightDirectionId, _lightDirection.x, _lightDirection.y, _lightDirection.z);
         return;
@@ -572,6 +645,7 @@ void Renderer::setWorldScaleUniform(const std::string& shaderName, bool newShade
     static glm::mat4 prevWorldScale;
     if (newShader)
     {
+        _setWorldScaleUniformChanges++;
         worldScaleId = _shaderPrograms[shaderName]->getUniformAddress(ShaderProgram::worldScale);
         prevWorldScale = _worldScale;
         glUniformMatrix4fv(worldScaleId, 1, GL_FALSE, glm::value_ptr(_worldScale));
@@ -579,6 +653,7 @@ void Renderer::setWorldScaleUniform(const std::string& shaderName, bool newShade
     }
     if (_worldScale != prevWorldScale)
     {
+        _setWorldScaleUniformChanges++;
         prevWorldScale = _worldScale;
         glUniformMatrix4fv(worldScaleId, 1, GL_FALSE, glm::value_ptr(_worldScale));
         return;

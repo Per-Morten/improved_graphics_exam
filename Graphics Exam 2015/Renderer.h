@@ -77,6 +77,10 @@ public:
 
     bool isDayTime() const noexcept;
 
+    void setWindowTitle(const char* title);
+
+    void logFrameStats();
+
 private:
     // Rendering Functions
     // object related
@@ -102,12 +106,11 @@ private:
     void initializeOpenGL() noexcept;
     void initializeVariables() noexcept;
 
-
     Camera& _camera;
     SDL_Window* _window{};
     SDL_GLContext _context{};
     float _ambientFactor{ 0.1f };
-    glm::vec3 _lightDirection{cos(degToRad(20)), sin(degToRad(20)), 0.0f};
+    glm::vec3 _lightDirection{cos(degToRad(120.0f)), sin(degToRad(120.0f)), 0.0f};
 
     glm::mat4 _worldScale{1 };
     glm::mat4 _projectionMatrix{};
@@ -118,6 +121,24 @@ private:
     bool _windowIsOpen{};
     bool _warpMode{false};
 
-    float _sunAngle{ 20 };
+    float _sunAngle{ 120.0f };
+
+    // Shader tracking vars.
+    int _frameNumber{};
+    int _shaderChanges{};
+    int _textureChanges{};
+    int _cullChanges{};
+
+    int _setColorUniformChanges{};
+    int _setModelMatrixUniformChanges{};
+    int _setNormalMatrixUniformChanges{};
+    int _setTextureOffsetUniformChanges{};
+    int _setNumberOfRowsChanges{};
+
+    int _setViewMatrixUniformChanges{};
+    int _setProjectionMatrixUniformChanges{};
+    int _setAmbientFactorUniformChanges{};
+    int _setLightDirectionUniformChanges{};
+    int _setWorldScaleUniformChanges{};
 };
 

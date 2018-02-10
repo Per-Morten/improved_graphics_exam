@@ -59,6 +59,9 @@ Mesh::Mesh(const std::vector<glm::vec3>& vertexPositions,
         _drawCount = newIBO.size();
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(newIBO.front()) * newIBO.size(), newIBO.data(), GL_STATIC_DRAW);
     }
+
+    glBindVertexArray(_vertexAttributeObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferObject);
 }
 
 Mesh::~Mesh() noexcept
@@ -67,7 +70,5 @@ Mesh::~Mesh() noexcept
 
 void Mesh::draw() noexcept
 {
-    glBindVertexArray(_vertexAttributeObject);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferObject);
     glDrawElements(GL_TRIANGLES, _drawCount, GL_UNSIGNED_INT, nullptr);
 }

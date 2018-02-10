@@ -1,8 +1,8 @@
 //===========================================================
-// File: main.cpp	
-// StudentName: Per-Morten Straume                          
-//                                                          
-// Exam 2015: IMT-2531 Graphics Programming Exam.                                
+// File: main.cpp
+// StudentName: Per-Morten Straume
+//
+// Exam 2015: IMT-2531 Graphics Programming Exam.
 //===========================================================
 
 /* Template Author:Simon McCallum
@@ -41,9 +41,11 @@ $(SDL_HOME)\include;$(GLEW_HOME)\include;$(GLM_HOME);$(IncludePath)
 #include "TerrainHandler.h"
 #include "Consts.h"
 
+#include "Logger.h"
+
 
 // Force external GPU
-// As my PC Sometimes decides 
+// As my PC Sometimes decides
 //extern "C"
 //{
 //    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -104,6 +106,9 @@ SceneObject* createSkyBox(Renderer& renderer)
                                           glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                                           glm::vec3(0.0f, 0.0f, 0.0f),
                                           Renderer::FacingDirection::FRONT);
+
+    skyBox->setTexture(Renderer::skyboxDayTexture);
+
     return skyBox;
 }
 
@@ -304,11 +309,18 @@ int main(int argc, char* argv[])
     auto skyBox = createSkyBox(renderer);
     // 0.1 as we don't want to multiply our scales etc with 0 on first runthrough
     float deltaTime = 0.1f;
+
+    float sumDeltaTime = 0.0f;
+    int frameCount = 0;
+
+    // Turn off vsync
+    SDL_GL_SetSwapInterval(0);
+
     while (renderer.windowIsOpen())
     {
+        auto clockStart = std::chrono::high_resolution_clock::now();
         bool keepWindowOpen = inputHandler.processEvents(eventHandler, eventQueue, mousePosition);
 
-        auto clockStart = std::chrono::high_resolution_clock::now();
         camera.update(deltaTime);
 
         renderer.keepWindowOpen(keepWindowOpen);
@@ -321,11 +333,20 @@ int main(int argc, char* argv[])
         renderer.present();
         handleInput(eventQueue, renderer, camera, deltaTime, mousePosition, heights, terrainHandler);
 
+        handleTimeOfDay(renderer, *skyBox);
+
         auto clockStop = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(clockStop - clockStart).count();
+        sumDeltaTime += deltaTime;
 
+        if (frameCount++ >= 10)
+        {
+            renderer.setWindowTitle(std::to_string(sumDeltaTime / frameCount).c_str());
+            frameCount = 0;
+            sumDeltaTime = 0.0f;
+        }
 
-        handleTimeOfDay(renderer, *skyBox);
+        renderer.logFrameStats();
     }
     delete skyBox;
     return 0;

@@ -61,6 +61,6 @@ private:
 
     SceneObject* _cloud{};
     std::vector<SceneObject*> _downPour{};
-    bool _isRaining{};
+    bool _isRaining{true};
     bool _isSnowing{};
 };

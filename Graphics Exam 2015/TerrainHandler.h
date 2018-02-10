@@ -1,8 +1,8 @@
 //===========================================================
-// File: TerrainHandler.h	
-// StudentName: Per-Morten Straume                          
-//                                                          
-// Exam 2015: IMT-2531 Graphics Programming Exam.                                
+// File: TerrainHandler.h
+// StudentName: Per-Morten Straume
+//
+// Exam 2015: IMT-2531 Graphics Programming Exam.
 //===========================================================
 #pragma once
 #include <vector>
@@ -15,7 +15,7 @@ class TerrainHandler
 {
 public:
     using SceneObjectList = std::vector<SceneObject*>;
-    using SceneObject3DList = std::vector<std::vector<std::vector<gsl::owner<SceneObject*>>>>;
+    using SceneObject3DList = std::vector<std::vector<std::vector<SceneObject*>>>;
     using HeightMap = std::vector<std::vector<int>>;
 
     static constexpr int shallowWaterLevel = 1;
@@ -35,7 +35,7 @@ public:
     void deleteCube(std::size_t xIndex, std::size_t zIndex) noexcept;
 
     void switchToNextTextureSet() noexcept;
-    
+
     void toggleRain() noexcept;
     void toggleSnow() noexcept;
 
@@ -45,7 +45,7 @@ private:
     void hideUndrawableTerrain() noexcept;
     void createDrawableSceneList() noexcept;
     void applyCorrectTextures() noexcept;
-    
+
     void updateDownPour(float deltaTime) noexcept;
     void createDownPour() noexcept;
     void makeRain() noexcept;
@@ -59,8 +59,8 @@ private:
 
     GLuint _baseTexture{};
 
-    gsl::owner<SceneObject*> _cloud{};
-    std::vector<gsl::owner<SceneObject*>> _downPour{};
+    SceneObject* _cloud{};
+    std::vector<SceneObject*> _downPour{};
     bool _isRaining{};
     bool _isSnowing{};
 };

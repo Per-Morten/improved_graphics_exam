@@ -91,7 +91,7 @@ std::vector<std::vector<int>> LoadTerrain(const std::string& terrainFilename)
     return positions;
 }
 
-gsl::owner<SceneObject*> createSkyBox(Renderer& renderer)
+SceneObject* createSkyBox(Renderer& renderer)
 {
     constexpr float skyboxScale = 1000.0f;
     SceneObject* skyBox = new SceneObject(renderer,

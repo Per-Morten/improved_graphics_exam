@@ -1,8 +1,8 @@
 //===========================================================
-// File: Renderer.h	
-// StudentName: Per-Morten Straume                          
-//                                                          
-// Exam 2015: IMT-2531 Graphics Programming Exam.                                
+// File: Renderer.h
+// StudentName: Per-Morten Straume
+//
+// Exam 2015: IMT-2531 Graphics Programming Exam.
 //===========================================================
 #pragma once
 #include <string>
@@ -11,7 +11,6 @@
 #include <gl\glew.h>
 #include <gl\glu.h>
 #include <glm\glm.hpp>
-#include "GSL\gsl.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
 
@@ -105,16 +104,16 @@ private:
 
 
     Camera& _camera;
-    gsl::owner<SDL_Window*> _window{};
-    gsl::owner<SDL_GLContext> _context{};
+    SDL_Window* _window{};
+    SDL_GLContext _context{};
     float _ambientFactor{ 0.1f };
     glm::vec3 _lightDirection{cos(degToRad(20)), sin(degToRad(20)), 0.0f};
 
     glm::mat4 _worldScale{1 };
     glm::mat4 _projectionMatrix{};
-    std::unordered_map<std::string, gsl::owner<ShaderProgram*>> _shaderPrograms{};
-    std::unordered_map<std::string, gsl::owner<Mesh*>> _meshes{};
-    std::unordered_map<std::string, gsl::owner<Texture*>> _textures{};
+    std::unordered_map<std::string, ShaderProgram*> _shaderPrograms{};
+    std::unordered_map<std::string, Mesh*> _meshes{};
+    std::unordered_map<std::string, Texture*> _textures{};
 
     bool _windowIsOpen{};
     bool _warpMode{false};

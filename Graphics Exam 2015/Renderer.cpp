@@ -22,10 +22,10 @@ namespace
         // Stolen from the graphicsProgramming labs
         decltype(auto) createCube()
         {
-            using MeshInfo = std::tuple < std::vector<glm::vec3>
+            using MeshInfo = std::tuple<std::vector<glm::vec3>
                 , std::vector<glm::vec3>
                 , std::vector<glm::vec2>
-                , std::vector < GLuint >> ;
+                , std::vector<GLuint>>;
 
             std::vector<glm::vec3> cubePositions =
             {
@@ -194,8 +194,8 @@ Renderer::~Renderer() noexcept
     }
     for (auto& mesh : _meshes)
     {
-        delete mesh.second;
-        mesh.second = nullptr;
+        //delete mesh.second;
+        //mesh.second = nullptr;
     }
     for (auto& texture : _textures)
     {
@@ -417,7 +417,7 @@ void Renderer::logFrameStats()
               _setAmbientFactorUniformChanges,
               _setLightDirectionUniformChanges,
               _setWorldScaleUniformChanges
-             );
+    );
 
     _shaderChanges = 0;
     _textureChanges = 0;
@@ -432,6 +432,80 @@ void Renderer::logFrameStats()
     _setAmbientFactorUniformChanges = 0;
     _setLightDirectionUniformChanges = 0;
     _setWorldScaleUniformChanges = 0;
+}
+
+void Renderer::createStaticLandscape(const std::string& meshName, 
+                                     const std::vector<glm::vec3>& positions,
+                                     const std::vector<GLuint>& textureIndices)
+{
+    // Don't want to redo this every time there is a change, look for possibility of changing the data!
+    auto cube = Local::createCube();
+    const std::vector<glm::vec3>& cubeVertices = std::get<0>(cube);
+    const std::vector<glm::vec3>& cubeNormals = std::get<1>(cube);
+    const std::vector<glm::vec2>& cubeTextureCoords = std::get<2>(cube);
+    const std::vector<GLuint>& cubeIbo = std::get<3>(cube);
+
+    // Create positions - Works
+    std::vector<glm::vec3> vertexPositions;
+    vertexPositions.reserve(positions.size() * cubeVertices.size());
+    for (const auto& pos : positions)
+    {
+        for (const auto& vertex : cubeVertices)
+        {
+            vertexPositions.emplace_back(vertex + pos);
+        }
+    }
+
+    // Create normals - Works (Atleast somewhat)
+    std::vector<glm::vec3> vertexNormals;
+    vertexPositions.reserve(positions.size() * cubeNormals.size());
+    for (const auto& pos : positions)
+    {
+        for (const auto& normal : cubeNormals)
+        {
+            vertexNormals.emplace_back(normal);
+        }
+    }
+
+    // Create texture coordinates - Works
+    std::vector<glm::vec2> textureCoordinates;
+    textureCoordinates.reserve(positions.size() * cubeTextureCoords.size());
+    for (const auto& pos : positions)
+    {
+        for (const auto& coord : cubeTextureCoords)
+        {
+            textureCoordinates.emplace_back(coord);
+        }
+    }
+
+    // Create IBO - Works
+    std::vector<GLuint> ibo;
+    const std::size_t iboCount = cubeIbo.size() * positions.size();
+    ibo.reserve(iboCount);
+
+    int counter = 0;
+    for (std::size_t i = 0; i < iboCount; i += 4)
+    {
+        ibo.push_back(i);
+        ibo.push_back(i + 1);
+        ibo.push_back(i + 2);
+        ibo.push_back(i);
+        ibo.push_back(i + 2);
+        ibo.push_back(i + 3);
+    }
+    
+    std::vector<GLuint> textureIndicesMultiplied;
+    std::size_t textureIndicesCount = positions.size() * cubeVertices.size();
+    textureIndicesMultiplied.reserve(textureIndicesCount);
+    for (const auto& index : textureIndices)
+    {
+        for (const auto& coord : cubeTextureCoords)
+        {
+            textureIndicesMultiplied.emplace_back(index);
+        }
+    }
+
+    _meshes[meshName] = std::make_unique<Mesh>(vertexPositions, vertexNormals, textureCoordinates, ibo, textureIndicesMultiplied);
 }
 
 // Private functions
@@ -692,6 +766,9 @@ bool Renderer::createWindow() noexcept
 
 bool Renderer::createContext() noexcept
 {
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     _context = SDL_GL_CreateContext(_window);
     if (_context == nullptr)
     {
@@ -730,9 +807,12 @@ void Renderer::initializeOpenGL() noexcept
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    //glDisable(GL_DEPTH_TEST);
 
+    //glDisable(GL_CULL_FACE);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    //glCullFace(GL_FRONT);
 }
 
 void Renderer::initializeVariables() noexcept
@@ -740,9 +820,11 @@ void Renderer::initializeVariables() noexcept
     std::string regular = "../Resources/Shaders/directionalFullTexturev3Indexed";
     std::string skybox = "../Resources/Shaders/NonScaling";
     std::string nonScalingWLightsShader = "../Resources/Shaders/NonScalingWLight";
+    std::string simple = "../Resources/Shaders/Simple";
     _shaderPrograms[regularShader] = new ShaderProgram(regular + ".vert", regular + ".frag");
     _shaderPrograms[nonScalingShader] = new ShaderProgram(skybox + ".vert", skybox + ".frag");
     _shaderPrograms[nonScalingWLight] = new ShaderProgram(nonScalingWLightsShader + ".vert", nonScalingWLightsShader + ".frag");
+    _shaderPrograms[simpleShader] = new ShaderProgram(simple + ".vert", simple + ".frag");
 
 
     auto meshData = Local::createCube();
@@ -751,10 +833,10 @@ void Renderer::initializeVariables() noexcept
     constexpr std::size_t normals = 1;
     constexpr std::size_t textureCoordinates = 2;
     constexpr std::size_t ibo = 3;
-    _meshes[cubeMesh] = new Mesh(std::get<positions>(meshData),
-                                 std::get<normals>(meshData),
-                                 std::get<textureCoordinates>(meshData),
-                                 std::get<ibo>(meshData));
+    _meshes[cubeMesh] = std::make_unique<Mesh>(std::get<positions>(meshData),
+                                               std::get<normals>(meshData),
+                                               std::get<textureCoordinates>(meshData),
+                                               std::get<ibo>(meshData));
 
     _textures[groundTexture] = new Texture("../Resources/Textures/texture.png", Consts::NUMBEROFROWSINATLAS);
     _textures[skyboxNightTexture] = new Texture("../Resources/Textures/Night.jpg", 1);

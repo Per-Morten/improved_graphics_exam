@@ -7,6 +7,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include <gl\glew.h>
 #include <gl\glu.h>
@@ -36,6 +37,7 @@ public:
     static constexpr auto regularShader = "DirectionalFullTexture";
     static constexpr auto nonScalingShader = "nonScaling";
     static constexpr auto nonScalingWLight = "nonScalingWLight";
+    static constexpr auto simpleShader = "simple";
     static constexpr auto windowName = "Graphics Exam 2015 - Per-Morten Straume" ;
     static constexpr float warpFov = 179.0f;
     static constexpr float lightRotationSpeed = 10.0f;
@@ -81,6 +83,10 @@ public:
 
     void logFrameStats();
 
+    void createStaticLandscape(const std::string& meshName,
+                               const std::vector<glm::vec3>& positions,
+                               const std::vector<GLuint>& textureIndices);
+
 private:
     // Rendering Functions
     // object related
@@ -115,7 +121,7 @@ private:
     glm::mat4 _worldScale{1 };
     glm::mat4 _projectionMatrix{};
     std::unordered_map<std::string, ShaderProgram*> _shaderPrograms{};
-    std::unordered_map<std::string, Mesh*> _meshes{};
+    std::unordered_map<std::string, std::unique_ptr<Mesh>> _meshes{};
     std::unordered_map<std::string, Texture*> _textures{};
 
     bool _windowIsOpen{};

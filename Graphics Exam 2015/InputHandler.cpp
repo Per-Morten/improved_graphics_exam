@@ -27,7 +27,7 @@ InputHandler::InputHandler()
     eventRepeatRate[ActionEnum::UP] = 0;
     eventRepeatRate[ActionEnum::MOUSEMOTION] = 0;
     eventRepeatRate[ActionEnum::CREATE] = 0;
-    eventRepeatRate[ActionEnum::ENABLEMOVEMENT] = 10;
+    eventRepeatRate[ActionEnum::ENABLEMOVEMENT] = 1000;
     eventRepeatRate[ActionEnum::NEXTTEXTURE] = 10;
     eventRepeatRate[ActionEnum::TOGGLERAIN] = 10;
     eventRepeatRate[ActionEnum::TOGGLESNOW] = 10;

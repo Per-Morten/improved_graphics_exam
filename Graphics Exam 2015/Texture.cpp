@@ -43,6 +43,7 @@ Texture::~Texture() noexcept
 
 void Texture::bind() noexcept
 {
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _textureHandle);
 }
 

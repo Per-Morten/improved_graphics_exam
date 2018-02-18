@@ -37,7 +37,11 @@ public:
     static constexpr float cameraSensitivity = 100.0f;
     const glm::vec2 mouseStartPos = { Consts::SCREEN_WIDTH / (cameraSensitivity * 2), Consts::SCREEN_HEIGHT / (cameraSensitivity * 2) };
 
+    // Closer for debug
+    //const glm::vec3 startPosition = { 0.0f, 50.0f, -100.0f };
+    // Normal
     const glm::vec3 startPosition = { 0.0f, 200.0f, -300.0f };
+
     const glm::vec3 upDirection = { 0.0f, 1.0f, 0.0f };
     const glm::vec3 startFocusPoint = { 0.0f,0.0f,0.0f };
     const float movementSpeed = { 100.0f };

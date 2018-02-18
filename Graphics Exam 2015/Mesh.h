@@ -21,11 +21,16 @@ public:
     Mesh(const std::vector<glm::vec3>& vertexPositions,
          const std::vector<glm::vec3>& vertexNormals,
          const std::vector<glm::vec2>& textureCoordinates,
-         const std::vector<GLuint>& IBO) noexcept;
+         const std::vector<GLuint>& IBO,
+         const std::vector<GLuint>& textureIndices = {}) noexcept;
     ~Mesh() noexcept;
 
     void draw() noexcept;
 private:
+    VertexBufferObject _positionsVBO{};
+    VertexBufferObject _normalsVBO{};
+    VertexBufferObject _textureCoordinateVBO{};
+    VertexBufferObject _textureIndicesVBO{};
     IndexBufferObject _indexBufferObject{};
     VertexAttributeObject _vertexAttributeObject{};
     GLuint _drawCount{};

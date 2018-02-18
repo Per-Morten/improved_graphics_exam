@@ -294,9 +294,12 @@ int main(int argc, char* argv[])
     {
     // Performance is horrible on debug with terrain3.
     #ifdef _DEBUG
-        heights = LoadTerrain("../terrain.pnm");
+        //heights = LoadTerrain("../terrain3.pnm");
+        heights = LoadTerrain("../small_terrain.pnm");
+        //heights = LoadTerrain("../single_block.pnm");
     #else
         heights = LoadTerrain("../terrain3.pnm");
+        //heights = LoadTerrain("../small_terrain.pnm"); 
     #endif
     }
 
